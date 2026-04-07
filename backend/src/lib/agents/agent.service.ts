@@ -29,7 +29,7 @@ export class AgentService {
 
   async run(userId: string, input: string) {
     try {
-      const userData = store.getUser(userId);
+      const userData = userId ? store.getUser(userId) : store.addUser({});
       const userPrompt: string = PROMPT.replace('{{ input }}', input).replace(
         '{{ user_data }}',
         JSON.stringify(userData),
@@ -48,12 +48,12 @@ export class AgentService {
       }
 
       if (!parsed) {
-        return `Failed! Please try again`;
+        return { userId: userData.id, message: `Failed! Please try again` };
       }
 
       if (parsed.tool) {
         if (parsed.args.message) {
-          return parsed.args.message;
+          return { userId: userData.id, message: parsed.args.message };
         }
         // Calculate drift generically
         parsed.args = this.driftService.calculateDrift(
@@ -62,7 +62,7 @@ export class AgentService {
           Metrics,
         );
 
-        const toolResult = await this.mcp.execute(parsed.tool, {
+        const toolResult = this.mcp.execute(parsed.tool, {
           userId,
           ...parsed.args,
         });
@@ -70,7 +70,7 @@ export class AgentService {
         // Store the new log
         store.addUserLog(userId, parsed.args);
 
-        return `✅ ${toolResult}`;
+        return { userId: userData.id, message: `✅ ${toolResult}` };
       }
     } catch (err) {
       console.error('Error parsing model output:', err);

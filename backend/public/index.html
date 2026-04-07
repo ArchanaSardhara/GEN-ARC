@@ -118,8 +118,7 @@
       const chatBox = document.getElementById('chat');
       const messageInput = document.getElementById('message');
       const sendBtn = document.getElementById('sendBtn');
-      const userId = 'user1';
-
+      var userId = null;
       // Default message when chat is empty
       const defaultMessage =
         'Hello! I am your Drift Calculation Assistant. You can tell me your name or log sleep, gym, or exercise.';
@@ -163,6 +162,9 @@
           });
 
           const data = await res.json();
+          if (data.userId !== userId) {
+            userId = data.userId;
+          }
           addMessage(data.response ?? 'Please try again!');
         } catch (err) {
           console.error('Error sending message:', err);

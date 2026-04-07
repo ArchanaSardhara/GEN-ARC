@@ -27,8 +27,8 @@ export class AppController {
     const { userId, message } = body;
 
     // Run Gemini agent
-    const response = await this.agentService.run(userId, message);
+    const res = await this.agentService.run(userId, message);
 
-    return { response };
+    return { response: res?.message, userId: res?.userId };
   }
 }

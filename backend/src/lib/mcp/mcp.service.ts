@@ -3,16 +3,22 @@ import { sleepTool } from '../tools/sleep.tool';
 import { gymTool } from '../tools/gym.tool';
 import { userTool } from '../tools/user.tool';
 import { grettingTool } from '../tools/greet.tool';
+import { offerChoiceTool } from '../tools/choice.tool';
 
 @Injectable()
 export class MCPService {
-  private tools = [sleepTool, gymTool, userTool, grettingTool];
+  private tools = [sleepTool, gymTool, userTool, grettingTool, offerChoiceTool];
 
   execute(toolName: string, args: any) {
+    console.log('toolName', toolName);
     const tool = this.tools.find((t) => t.name === toolName);
 
     if (!tool) {
-      throw new Error('Tool not found');
+      if (args.message) {
+        return args.message;
+      } else {
+        throw new Error('Tool not found');
+      }
     }
 
     return tool.execute(args);

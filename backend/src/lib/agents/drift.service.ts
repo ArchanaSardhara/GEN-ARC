@@ -19,7 +19,6 @@ export class DriftService {
     const result: LogItem = { ...newEntry };
 
     for (const key of metrics) {
-      console.log('key', key, newEntry[key]);
       if (key === 'sleep' && typeof newEntry.sleep?.hours === 'number') {
         const history = logs.map((log) => log.sleep?.hours ?? 0);
         const avg = history.length
@@ -30,21 +29,6 @@ export class DriftService {
         if (key === 'sleep' && newEntry.sleep.hours < 7) {
           result.warning = '⚠️ Sleep below 7 hours!';
         }
-      } else if (typeof newEntry[key] === 'number') {
-        const history = logs.map((log) => log[key]);
-        console.log('history :::', history);
-
-        // const avg = history.length
-        //   ? history.reduce((a: number, b: number) => a + b, 0) / history.length
-        //   : newEntry[key];
-        // const drift = newEntry[key] - avg;
-
-        // result[`${key}_drift`] = drift;
-
-        // // Example warning for sleep metric
-        // if (key === 'sleep' && newEntry[key] < 7) {
-        //   result.warning = '⚠️ Sleep below 7 hours!';
-        // }
       }
     }
 

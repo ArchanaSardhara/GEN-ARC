@@ -11,11 +11,13 @@ export const store = {
     if (data.name) {
       users[newUserId].name = data.name;
     }
+    return users[newUserId];
   },
   updateUser: (userId: string, data: Partial<UserData>) => {
     if (data.name) {
       users[userId].name = data.name;
     }
+    return users[userId];
   },
 
   getUser: (userId: string): UserData => {
