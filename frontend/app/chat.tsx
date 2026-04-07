@@ -1,23 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Chat() {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetch("http://localhost:5000/hello", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => res.json)
-      .then((res) => {
-        console.log("response :::", res);
-      });
-  }, []);
 
   const sendMessage = async () => {
     const res = await fetch("http://localhost:5000/agent", {

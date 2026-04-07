@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { MCPService } from '../mcp/mcp.service';
 import { store } from '../db/store';
 import { ConfigService } from '@nestjs/config';
+import { PROMPT } from './consts';
 
 @Injectable()
 export class AgentService {
@@ -13,43 +14,24 @@ export class AgentService {
     private config: ConfigService,
   ) {
     const apiKey = this.config.get<string>('GEMINI_API_KEY') || 'NOT_FOUND';
+    const apiModel =
+      this.config.get<string>('GEMINI_API_MODEL') || 'gemini-2.5-flash';
 
     const genAI = new GoogleGenerativeAI(apiKey);
     this.model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: apiModel,
     });
   }
 
   async run(userId: string, input: string) {
     const userData = store.getUser(userId);
+    const userPrompt: string = PROMPT.replace('{{ input }}', input).replace(
+      '{{ user_data }}',
+      JSON.stringify(userData),
+    );
 
-    const prompt = `
-You are a drift calcuation assistant.
-
-User Data:
-${JSON.stringify(userData)}
-
-User Input:
-${input}
-
-Rules:
-- If name → save_user
-- If sleep → log_sleep
-- If gym → log_gym
-- If sleep < 7 → warn user
-
-Return JSON:
-{
-  "tool": "...",
-  "args": {}
-}
-
-Otherwise normal text.
-`;
-
-    const result = await this.model.generateContent(prompt);
+    const result = await this.model.generateContent(userPrompt);
     const text = result.response.text();
-    console.log('text :::', text);
 
     try {
       const parsed = JSON.parse(text);
