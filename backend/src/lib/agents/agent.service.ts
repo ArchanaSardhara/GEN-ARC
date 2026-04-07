@@ -27,9 +27,12 @@ export class AgentService {
     });
   }
 
-  async run(userId: string, input: string) {
+  async run(userId: string, input: string, args: Record<string, any>) {
     try {
-      const userData = userId ? store.getUser(userId) : store.addUser({});
+      var userData = userId ? store.getUser(userId) : store.addUser({});
+      if (args) {
+        userData = { ...userData, ...args };
+      }
       const userPrompt: string = PROMPT.replace('{{ input }}', input).replace(
         '{{ user_data }}',
         JSON.stringify(userData),
@@ -45,6 +48,8 @@ export class AgentService {
         const jsonString = match[1].trim();
         // You can now safely parse it:
         parsed = JSON.parse(jsonString) as unknown as AgentModelResponse;
+      } else {
+        parsed = JSON.parse(text) as unknown as AgentModelResponse;
       }
 
       if (!parsed) {
@@ -52,8 +57,38 @@ export class AgentService {
       }
 
       if (parsed.tool) {
+        store.addUserLog(userId, {
+          ...parsed.args,
+          date: new Date().toISOString().split('T')[0],
+        });
+        if (parsed.message) {
+          return {
+            userId: userData.id,
+            message: parsed.message,
+            args: parsed.args,
+          };
+        }
         if (parsed.args.message) {
-          return { userId: userData.id, message: parsed.args.message };
+          return {
+            userId: userData.id,
+            message: parsed.args.message,
+            args: parsed.args,
+          };
+        }
+        if (parsed.args.question) {
+          return {
+            userId: userData.id,
+            message: parsed.args.question,
+            args: parsed.args,
+          };
+        }
+
+        if (parsed.label) {
+          return {
+            userId: userData.id,
+            message: parsed.label,
+            args: parsed.args,
+          };
         }
         // Calculate drift generically
         parsed.args = this.driftService.calculateDrift(
@@ -62,15 +97,16 @@ export class AgentService {
           Metrics,
         );
 
-        const toolResult = this.mcp.execute(parsed.tool, {
-          userId,
-          ...parsed.args,
-        });
+        // const toolResult = this.mcp.execute(parsed.tool, {
+        //   userId,
+        //   ...parsed.args,
+        // });
 
-        // Store the new log
-        store.addUserLog(userId, parsed.args);
-
-        return { userId: userData.id, message: `✅ ${toolResult}` };
+        return {
+          userId: userData.id,
+          message: `✅ ${parsed.args.message || parsed.args.question || parsed.label}`,
+          args: parsed.args,
+        };
       }
     } catch (err) {
       console.error('Error parsing model output:', err);

@@ -34,9 +34,10 @@
       .chat-box {
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 10px;
         height: 100%;
         padding: 10px;
+        padding-bottom: 180px;
         border-radius: 6px;
       }
 
@@ -62,7 +63,7 @@
         display: flex;
         gap: 10px;
         position: sticky;
-        bottom: 50px;
+        bottom: 0px;
         padding: 20px;
         padding-bottom: 70px;
         z-index: 2;
@@ -119,6 +120,7 @@
       const messageInput = document.getElementById('message');
       const sendBtn = document.getElementById('sendBtn');
       var userId = null;
+      var args = null;
       // Default message when chat is empty
       const defaultMessage =
         'Hello! I am your Drift Calculation Assistant. You can tell me your name or log sleep, gym, or exercise.';
@@ -153,17 +155,21 @@
         if (!message) return;
 
         addMessage(message, true);
+        messageInput.value = '';
 
         try {
           const res = await fetch('/agent', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, message }),
+            body: JSON.stringify({ userId, message, args }),
           });
 
           const data = await res.json();
           if (data.userId !== userId) {
             userId = data.userId;
+          }
+          if (data.args) {
+            args = data.args;
           }
           addMessage(data.response ?? 'Please try again!');
         } catch (err) {

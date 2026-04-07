@@ -23,12 +23,19 @@ export class AppController {
   }
 
   @Post('agent')
-  async runAgentPost(@Body() body: { userId: string; message: string }) {
-    const { userId, message } = body;
+  async runAgentPost(
+    @Body()
+    body: {
+      userId: string;
+      message: string;
+      args: Record<string, any>;
+    },
+  ) {
+    const { userId, message, args } = body;
 
     // Run Gemini agent
-    const res = await this.agentService.run(userId, message);
+    const res = await this.agentService.run(userId, message, args);
 
-    return { response: res?.message, userId: res?.userId };
+    return { response: res?.message, userId: res?.userId, args: res?.args };
   }
 }

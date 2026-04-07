@@ -10,12 +10,12 @@ export class MCPService {
   private tools = [sleepTool, gymTool, userTool, grettingTool, offerChoiceTool];
 
   execute(toolName: string, args: any) {
-    console.log('toolName', toolName);
+    console.log('toolName', toolName, args);
     const tool = this.tools.find((t) => t.name === toolName);
 
     if (!tool) {
-      if (args.message) {
-        return args.message;
+      if (args.message || args.question) {
+        return args.message || args.question;
       } else {
         throw new Error('Tool not found');
       }
