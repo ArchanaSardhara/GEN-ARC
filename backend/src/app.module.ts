@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AgentService } from '@lib/agents/agent.service';
 import { MCPService } from '@lib/mcp/mcp.service';
+import { DriftService } from '@lib/agents/drift.service';
 
 @Module({
   imports: [
@@ -13,6 +14,6 @@ import { MCPService } from '@lib/mcp/mcp.service';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, AgentService, MCPService],
+  providers: [AppService, AgentService, MCPService, DriftService],
 })
 export class AppModule {}

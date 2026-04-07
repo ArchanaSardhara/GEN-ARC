@@ -1,29 +1,33 @@
-interface UserData {
-  name?: string;
-  sleep?: Record<string, number>;
-  gym?: Record<string, number>;
-}
+import type { UserData, LogItem } from './types';
 
 const users: Record<string, UserData> = {};
 
 export const store = {
-  saveUser: (id: string, data: Partial<UserData>) => {
-    if (data.sleep) {
-      users[id] = {
-        ...(users[id] || {}),
-        sleep: { ...(users[id].sleep || {}), ...data.sleep },
-      };
-    } else if (data.gym) {
-      users[id] = {
-        ...(users[id] || {}),
-        gym: { ...(users[id].gym || {}), ...data.gym },
-      };
-    } else {
-      users[id] = { ...(users[id] || {}), ...data };
+  addUser: (data: Partial<UserData>) => {
+    const newUserId = Date.now().toString();
+    users[newUserId] = { id: newUserId, logs: [] };
+
+    // Merge other fields like name
+    if (data.name) {
+      users[newUserId].name = data.name;
+    }
+  },
+  updateUser: (userId: string, data: Partial<UserData>) => {
+    if (data.name) {
+      users[userId].name = data.name;
     }
   },
 
-  getUser: (id: string): UserData => {
-    return users[id] || {};
+  getUser: (userId: string): UserData => {
+    if (!users[userId]) {
+      // create new user and return
+      users[userId] = { id: Date.now().toString(), logs: [] };
+    }
+    return users[userId];
+  },
+
+  addUserLog: (userId: string, log: LogItem) => {
+    const user = store.getUser(userId);
+    user.logs.push(log);
   },
 };
