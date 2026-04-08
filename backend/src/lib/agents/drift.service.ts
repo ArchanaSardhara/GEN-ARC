@@ -24,7 +24,7 @@ export class DriftService {
         history.reduce((total, i) => total + (i.value ?? 0), 0) /
         history.length;
       const drift = (newEntry.value ?? 0) < avg;
-      if (drift) {
+      if (history.length > 2 && drift) {
         result.drift = avg - (newEntry.value ?? 0);
       }
     }
