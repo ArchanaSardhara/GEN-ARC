@@ -20,9 +20,7 @@
         flex-direction: column;
         gap: 20px;
         padding: 50px;
-        padding-bottom: 0px;
-        height: 100%;
-        box-sizing: border-box;
+        padding-bottom: 130px;
       }
 
       h1 {
@@ -35,9 +33,7 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
-        height: 100%;
         padding: 10px;
-        padding-bottom: 180px;
         border-radius: 6px;
       }
 
@@ -62,12 +58,18 @@
       .input-group {
         display: flex;
         gap: 10px;
-        position: sticky;
-        bottom: 0px;
+        position: fixed;
         padding: 20px;
         padding-bottom: 70px;
         z-index: 2;
         background-color: #fff;
+        z-index: 2;
+        background-color: #fff;
+        left: 50%;
+        bottom: 0px;
+        max-width: 40em;
+        width: 100%;
+        transform: translate(-50%, 0);
       }
 
       input.input {
@@ -95,6 +97,39 @@
 
       button.button:hover {
         background-color: #071561;
+      }
+
+      .loading {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .dot {
+        width: 6px;
+        height: 6px;
+        background: #fff;
+        border-radius: 50%;
+        animation: blink 1.4s infinite both;
+      }
+
+      .dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes blink {
+        0% {
+          opacity: 0.2;
+        }
+        20% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.2;
+        }
       }
     </style>
   </head>
@@ -156,6 +191,7 @@
 
         addMessage(message, true);
         messageInput.value = '';
+        const loader = addLoading();
 
         try {
           const res = await fetch('/agent', {
@@ -171,19 +207,35 @@
           if (data.args) {
             args = data.args;
           }
+          loader.remove();
           addMessage(data.response ?? 'Please try again!');
         } catch (err) {
           console.error('Error sending message:', err);
+          loader.remove();
           addMessage('Failed to get response.');
         }
-
-        messageInput.value = '';
       }
 
       sendBtn.addEventListener('click', sendMessage);
       messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
       });
+
+      function addLoading() {
+        const div = document.createElement('div');
+        div.classList.add('chatbot-input', 'loading');
+
+        div.innerHTML = `
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  `;
+
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        return div; // so we can remove it later
+      }
 
       // Initialize chat with default message
       initChat();
