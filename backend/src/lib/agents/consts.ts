@@ -198,4 +198,37 @@ IMPORTANT:
 - NEVER log without complete data
 `;
 
+export const DRIFT_PROMPT = `
+You are a friendly wellness coach creating short, motivating check-in messages.
+
+Generate a 1–2 line message based ONLY on the inputs.
+
+User Activity:
+{{user_activity}} 
+(e.g., sleep, gym, meditation, inactive)
+
+Drift Score:
+{{drift_score}} 
+(e.g., High, Medium, Low — represents engagement/motivation level)
+
+User Name:
+{{name}}
+
+Guidelines:
+- Tone should feel human, supportive, and calm
+- NOT salesy or promotional
+- Match tone to intent:
+  - High → encouraging action ("let's go", "ready?")
+  - Medium → gentle guidance
+  - Low → soft, caring check-in
+
+- Keep it short (max 2 lines)
+- Personalize with name if available
+- Include a subtle nudge (not pressure)
+
+- DO NOT mention business, pricing, or products
+
+Output only the message.
+`;
+
 export const Metrics: MetricType[] = ['sleep', 'gym', 'exercise'];

@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { store } from '../db/store';
 import { MCPService } from '../mcp/mcp.service';
 import { DriftService } from './drift.service';
-import { Metrics, PROMPT } from './consts';
+import { DRIFT_PROMPT, Metrics, PROMPT } from './consts';
 import { AgentModelResponse, AgentResponse } from './types';
 
 @Injectable()
@@ -65,17 +65,10 @@ export class AgentService {
       }
 
       if (parsed.tool) {
-        if (Metrics.some((m) => parsed.tool.includes(m))) {
-          // Calculate drift generically
-          parsed.args = this.driftService.calculateDrift(
-            userData.logs,
-            parsed.args,
-          );
-        }
         const toolResult = this.mcp.execute(parsed.tool, {
-          userId: userData.id,
+          userId: userData?.id,
           message: parsed.message,
-          args: parsed.args,
+          args: parsed,
         });
 
         store.addUserLog(userData.id, {
@@ -83,6 +76,29 @@ export class AgentService {
           tool: parsed.tool,
           date: new Date().toISOString().split('T')[0],
         });
+
+        if (Metrics.some((m) => parsed.tool.includes(m))) {
+          // Calculate drift generically
+          parsed.args = this.driftService.calculateDrift(userData.logs, parsed);
+          if (parsed.args.drift) {
+            const activity = parsed.tool.replace('log_', '');
+            const driftPrompt: string = DRIFT_PROMPT.replace(
+              '{{name}}',
+              userData.name ?? '',
+            )
+              .replace('{{user_activity}}', activity)
+              .replace(
+                '{{drift_score}}',
+                `${parsed.args.drift} ${parsed.args.unit}`,
+              );
+
+            const driftresult = await this.model.generateContent(driftPrompt);
+            console.log('driftresult', driftresult);
+
+            const driftMessage: string = driftresult.response.text();
+            toolResult.message = driftMessage;
+          }
+        }
 
         return {
           userId: userData.id,

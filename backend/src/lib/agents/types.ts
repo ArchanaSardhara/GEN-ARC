@@ -5,6 +5,7 @@ export interface AgentModelResponse {
   args: Intent & { message?: string; question?: string };
   label?: string;
   message?: string;
+  date: string;
 }
 
 export interface AgentResponse {
