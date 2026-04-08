@@ -1,4 +1,6 @@
 import { store } from '../db/store';
+import { offerChoiceTool } from './choice.tool';
+import { ToolArgs } from './types';
 
 interface GymToolArgs {
   userId: string;
@@ -9,14 +11,15 @@ interface GymToolArgs {
 export const gymTool = {
   name: 'log_gym',
 
-  execute({ userId, minutes, date }: GymToolArgs) {
-    if (!minutes) {
-      return 'How long did you go to the gym?';
-    }
+  execute({ userId, message, args }: ToolArgs) {
     store.addUserLog(userId, {
-      gym: { minutes },
-      date: date ?? new Date().toISOString().split('T')[0],
+      ...args,
+      date: args.date ?? new Date().toISOString().split('T')[0],
     });
-    return `Gym logged: ${minutes}`;
+    if (message) {
+      return { userId, args, message };
+    } else {
+      offerChoiceTool.execute({ userId, message: '', args });
+    }
   },
 };

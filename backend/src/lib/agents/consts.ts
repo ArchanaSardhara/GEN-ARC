@@ -61,6 +61,13 @@ Exercise:
 → ask_followup
 → message: "What type of exercise and how long?"
 
+Other Activity (DYNAMIC INTENT):
+If user mentions any activity NOT sleep/gym/exercise:
+→ Extract activity name (e.g., "cricket", "reading", "walking")
+→ tool: "ask_followup"
+→ intent: "{{activity_name}}"  // dynamic
+→ message: "I noticed you mentioned {{activity_name}}. Do you want to track it? If yes, how long did you spend on it?"
+
 ---
 
 FOLLOW-UP HANDLING:
@@ -134,6 +141,8 @@ STANDARD RESPONSE FORMAT (STRICT JSON):
   "tool": "...",
   "args": {
     "date": "YYYY-MM-DD",
+    "value": 6 // user input for sleep, exercise or gym
+    "unit": "minute | hours | days" // from user input
     ...
   },
   "message": "..."

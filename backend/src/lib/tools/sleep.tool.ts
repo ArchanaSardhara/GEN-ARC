@@ -1,22 +1,19 @@
 import { store } from '../db/store';
-
-interface SleepToolArgs {
-  userId: string;
-  hours: number;
-  date?: string;
-}
+import { offerChoiceTool } from './choice.tool';
+import { ToolArgs } from './types';
 
 export const sleepTool = {
   name: 'log_sleep',
 
-  execute({ userId, hours, date }: SleepToolArgs) {
-    if (!hours) {
-      return 'How many hours did you sleep?';
-    }
+  execute({ userId, args, message }: ToolArgs) {
     store.addUserLog(userId, {
-      sleep: { hours },
-      date: date ?? new Date().toISOString().split('T')[0],
+      ...args,
+      date: args.date ?? new Date().toISOString().split('T')[0],
     });
-    return `Sleep logged: ${hours}`;
+    if (message) {
+      return { userId, args, message };
+    } else {
+      offerChoiceTool.execute({ userId, message: '', args });
+    }
   },
 };

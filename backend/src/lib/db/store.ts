@@ -1,4 +1,5 @@
-import type { UserData, LogItem } from './types';
+import { Intent } from 'src/types/intent';
+import type { UserData } from './types';
 
 const users: Record<string, UserData> = {};
 
@@ -28,7 +29,7 @@ export const store = {
     return users[userId];
   },
 
-  addUserLog: (userId: string, log: LogItem) => {
+  addUserLog: (userId: string, log: Intent) => {
     const user = store.getUser(userId);
     user.logs.push(log);
   },
