@@ -2,20 +2,14 @@ import { store } from '../db/store';
 import { offerChoiceTool } from './choice.tool';
 import { ToolArgs } from './types';
 
-interface UserToolArgs {
-  userId?: string;
-  name?: string;
-}
-
-export const userTool = {
-  name: 'save_user',
+export const activityTool = {
+  name: 'log_activity',
 
   execute({ userId, args, message }: ToolArgs) {
-    if (!userId) {
-      store.addUser({ name: args.name });
-    } else {
-      store.updateUser(userId, { name: args.name });
-    }
+    store.addUserLog(userId, {
+      ...args,
+      date: args.date ?? new Date().toISOString().split('T')[0],
+    });
     if (message) {
       return { userId, args, message };
     } else {

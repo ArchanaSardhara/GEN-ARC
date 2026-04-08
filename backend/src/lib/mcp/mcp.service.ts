@@ -4,21 +4,28 @@ import { gymTool } from '../tools/gym.tool';
 import { userTool } from '../tools/user.tool';
 import { grettingTool } from '../tools/greet.tool';
 import { offerChoiceTool } from '../tools/choice.tool';
+import { activityTool } from '../tools/activity.tool';
 
 @Injectable()
 export class MCPService {
-  private tools = [sleepTool, gymTool, userTool, grettingTool, offerChoiceTool];
+  private tools = [
+    sleepTool,
+    gymTool,
+    userTool,
+    grettingTool,
+    offerChoiceTool,
+    activityTool,
+  ];
 
   execute(toolName: string, args: any) {
-    console.log('toolName', toolName, args);
     const tool = this.tools.find((t) => t.name === toolName);
 
+    if (!tool && toolName.includes('log')) {
+      activityTool.execute(args);
+    }
+
     if (!tool) {
-      if (args.message || args.question) {
-        return args.message || args.question;
-      } else {
-        throw new Error('Tool not found');
-      }
+      return { ...args };
     }
 
     return tool.execute(args);

@@ -1,3 +1,5 @@
+import { ToolArgs } from './types';
+
 const greetings = [
   "Hey there! I'm your Drift Assistant. What's your name?",
   "Hi! I'd love to help you track your habits. What should I call you?",
@@ -24,11 +26,19 @@ interface GreetToolArgs {
 export const grettingTool = {
   name: 'greet_and_ask_name',
 
-  execute({ message, label }: GreetToolArgs) {
-    if (!message && !label) {
-      const randomInt = Math.floor(Math.random() * 14);
-      return greetings[randomInt];
-    }
-    return message ?? label;
+  execute({ message, args }: ToolArgs) {
+    if (message)
+      return {
+        userId: args.userId,
+        message: message,
+        args: args,
+      };
+
+    const randomInt = Math.floor(Math.random() * 14);
+    return {
+      userId: args.userId,
+      message: greetings[randomInt],
+      args: args,
+    };
   },
 };

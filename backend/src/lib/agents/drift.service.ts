@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
-import { LogItem, MetricType } from '../db/types';
+import { Intent } from 'src/types/intent';
+import { Metrics } from './consts';
 
 @Injectable()
 export class DriftService {
@@ -11,24 +12,20 @@ export class DriftService {
    * @param metrics - array of keys to calculate drift
    * @returns newEntry augmented with drift values and warnings
    */
-  calculateDrift(
-    logs: Array<LogItem>,
-    newEntry: LogItem,
-    metrics: MetricType[],
-  ): LogItem {
-    const result: LogItem = { ...newEntry };
+  calculateDrift(logs: Array<Intent>, newEntry: Intent): Intent {
+    const result: Intent = { ...newEntry };
+    const metrics = logs
+      .map((l) => l.tool)
+      .filter((tool) => (tool ?? '').includes('log'));
 
     for (const key of metrics) {
-      if (key === 'sleep' && typeof newEntry.sleep?.hours === 'number') {
-        const history = logs.map((log) => log.sleep?.hours ?? 0);
-        const avg = history.length
-          ? history.reduce((total, i) => total + i, 0) / history.length
-          : newEntry.sleep?.hours;
-        const drift = newEntry.sleep?.hours - avg;
-        result['sleep_drift'] = drift;
-        if (key === 'sleep' && newEntry.sleep.hours < 7) {
-          result.warning = '⚠️ Sleep below 7 hours!';
-        }
+      const history = logs.filter((l) => l.tool === key).slice(0, 10);
+      const avg =
+        history.reduce((total, i) => total + (i.value ?? 0), 0) /
+        history.length;
+      const drift = (newEntry.value ?? 0) < avg;
+      if (history.length > 2 && drift) {
+        result.drift = avg - (newEntry.value ?? 0);
       }
     }
 

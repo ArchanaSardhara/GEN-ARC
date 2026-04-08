@@ -5,8 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { store } from '../db/store';
 import { MCPService } from '../mcp/mcp.service';
 import { DriftService } from './drift.service';
-import { Metrics, PROMPT } from './consts';
-import { AgentModelResponse } from './types';
+import { DRIFT_PROMPT, Metrics, PROMPT } from './consts';
+import { AgentModelResponse, AgentResponse } from './types';
 
 @Injectable()
 export class AgentService {
@@ -27,7 +27,11 @@ export class AgentService {
     });
   }
 
-  async run(userId: string, input: string, args: Record<string, any>) {
+  async run(
+    userId: string,
+    input: string,
+    args: Record<string, any>,
+  ): Promise<AgentResponse> {
     try {
       var userData = userId ? store.getUser(userId) : store.addUser({});
       if (args) {
@@ -53,63 +57,63 @@ export class AgentService {
       }
 
       if (!parsed) {
-        return { userId: userData.id, message: `Failed! Please try again` };
+        return {
+          userId: userData?.id ?? null,
+          message: `Failed! Please try again`,
+          args: args,
+        };
       }
 
       if (parsed.tool) {
-        store.addUserLog(userId, {
+        const toolResult = this.mcp.execute(parsed.tool, {
+          userId: userData?.id,
+          message: parsed.message,
+          args: parsed,
+        });
+
+        store.addUserLog(userData.id, {
           ...parsed.args,
+          tool: parsed.tool,
           date: new Date().toISOString().split('T')[0],
         });
-        if (parsed.message) {
-          return {
-            userId: userData.id,
-            message: parsed.message,
-            args: parsed.args,
-          };
-        }
-        if (parsed.args.message) {
-          return {
-            userId: userData.id,
-            message: parsed.args.message,
-            args: parsed.args,
-          };
-        }
-        if (parsed.args.question) {
-          return {
-            userId: userData.id,
-            message: parsed.args.question,
-            args: parsed.args,
-          };
-        }
 
-        if (parsed.label) {
-          return {
-            userId: userData.id,
-            message: parsed.label,
-            args: parsed.args,
-          };
-        }
-        // Calculate drift generically
-        parsed.args = this.driftService.calculateDrift(
-          userData.logs,
-          parsed.args,
-          Metrics,
-        );
+        if (Metrics.some((m) => parsed.tool.includes(m))) {
+          // Calculate drift generically
+          parsed.args = this.driftService.calculateDrift(userData.logs, parsed);
+          if (parsed.args.drift) {
+            const activity = parsed.tool.replace('log_', '');
+            const driftPrompt: string = DRIFT_PROMPT.replace(
+              '{{name}}',
+              userData.name ?? '',
+            )
+              .replace('{{user_activity}}', activity)
+              .replace(
+                '{{drift_score}}',
+                `${parsed.args.drift} ${parsed.args.unit}`,
+              );
 
-        // const toolResult = this.mcp.execute(parsed.tool, {
-        //   userId,
-        //   ...parsed.args,
-        // });
+            const driftresult = await this.model.generateContent(driftPrompt);
+            console.log('driftresult', driftresult);
+
+            const driftMessage: string = driftresult.response.text();
+            toolResult.message = driftMessage;
+          }
+        }
 
         return {
           userId: userData.id,
-          message: `✅ ${parsed.args.message || parsed.args.question || parsed.label}`,
-          args: parsed.args,
+          message: toolResult?.message ?? parsed.message,
+          args: toolResult?.args,
         };
       }
     } catch (err) {
       console.error('Error parsing model output:', err);
     }
+
+    return {
+      userId: userId ?? null,
+      message: 'Something went wrong. Please try again.',
+      args,
+    };
   }
 }
