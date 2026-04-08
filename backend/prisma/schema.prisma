@@ -1,0 +1,33 @@
+datasource db {
+  provider = "postgresql" // or "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id    Int    @id @default(autoincrement())
+  name  String
+  logs  ActivityLog[]
+}
+
+model ActivityType {
+  id             Int    @id @default(autoincrement())
+  name           String
+  expectedValue  Float
+  unit           String
+  logs           ActivityLog[]
+}
+
+model ActivityLog {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  activityTypeId  Int
+  value           Float
+  date            DateTime @default(now())
+
+  user            User          @relation(fields: [userId], references: [id])
+  activityType    ActivityType  @relation(fields: [activityTypeId], references: [id])
+}

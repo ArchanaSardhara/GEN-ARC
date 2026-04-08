@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>GEN ARC Agent</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #fff;
+        margin: auto;
+        height: 100vh;
+        width: 100%;
+        max-width: 40rem;
+        box-sizing: border-box;
+      }
+
+      .container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 50px;
+        padding-bottom: 0px;
+        height: 100%;
+        box-sizing: border-box;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      .chat-box {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        height: 100%;
+        padding: 10px;
+        padding-bottom: 180px;
+        border-radius: 6px;
+      }
+
+      .user-input {
+        display: flex;
+        justify-content: flex-end;
+        background-color: #ededed;
+        margin-left: auto;
+        padding: 10px 12px;
+        border-radius: 18px;
+      }
+      .chatbot-input {
+        display: flex;
+        width: fit-content;
+        justify-content: flex-start;
+        background-color: #102496;
+        color: #fff;
+        padding: 10px 12px;
+        border-radius: 18px;
+      }
+
+      .input-group {
+        display: flex;
+        gap: 10px;
+        position: sticky;
+        bottom: 0px;
+        padding: 20px;
+        padding-bottom: 70px;
+        z-index: 2;
+        background-color: #fff;
+      }
+
+      input.input {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        border: 0.5px solid #ccc;
+        font-size: 14px;
+      }
+      input.input:focus,
+      input.input:focus-visible {
+        border: 1px solid #ccc;
+        outline: none;
+      }
+
+      button.button {
+        padding: 8px 16px;
+        font-size: 16px;
+        border: none;
+        border-radius: 18px;
+        background-color: #102496;
+        color: white;
+        cursor: pointer;
+      }
+
+      button.button:hover {
+        background-color: #071561;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>GEN ARC Agent</h1>
+
+      <div id="chat" class="chat-box"></div>
+
+      <div class="input-group">
+        <input
+          id="message"
+          class="input"
+          type="text"
+          placeholder="Enter message"
+        />
+        <button id="sendBtn" class="button">Send</button>
+      </div>
+    </div>
+
+    <script>
+      const chatBox = document.getElementById('chat');
+      const messageInput = document.getElementById('message');
+      const sendBtn = document.getElementById('sendBtn');
+      var userId = null;
+      var args = null;
+      // Default message when chat is empty
+      const defaultMessage =
+        'Hello! I am your Drift Calculation Assistant. You can tell me your name or log sleep, gym, or exercise.';
+
+      function initChat() {
+        if (chatBox.children.length === 0) {
+          const h1 = document.createElement('h1');
+          h1.textContent = defaultMessage;
+          h1.style.margin = 'auto';
+          chatBox.appendChild(h1);
+        }
+      }
+
+      function addMessage(text, isUser = false) {
+        // Remove default message if present
+        if (
+          chatBox.children.length === 1 &&
+          chatBox.children[0].textContent === defaultMessage
+        ) {
+          chatBox.innerHTML = '';
+        }
+
+        const div = document.createElement('div');
+        div.textContent = text;
+        div.classList.add(isUser ? 'user-input' : 'chatbot-input');
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      async function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        addMessage(message, true);
+        messageInput.value = '';
+
+        try {
+          const res = await fetch('/agent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, message, args }),
+          });
+
+          const data = await res.json();
+          if (data.userId !== userId) {
+            userId = data.userId;
+          }
+          if (data.args) {
+            args = data.args;
+          }
+          addMessage(data.response ?? 'Please try again!');
+        } catch (err) {
+          console.error('Error sending message:', err);
+          addMessage('Failed to get response.');
+        }
+
+        messageInput.value = '';
+      }
+
+      sendBtn.addEventListener('click', sendMessage);
+      messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+      });
+
+      // Initialize chat with default message
+      initChat();
+    </script>
+  </body>
+</html>
