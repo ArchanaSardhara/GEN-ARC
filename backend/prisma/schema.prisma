@@ -1,33 +1,122 @@
-datasource db {
-  provider = "postgresql" // or "sqlite"
-  url      = env("DATABASE_URL")
-}
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "./generated/prisma"
 }
 
+datasource db {
+  provider = "postgresql"
+}
+
+
 model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  logs  ActivityLog[]
+  id                 Int      @id @default(autoincrement())
+  internal_key       String   @unique @default(uuid())
+
+  name               String
+
+  created_by         String   @default("system")
+  updated_by         String   @default("system")
+  created_date_time  DateTime @default(now())
+  updated_date_time  DateTime @updatedAt
+
+  logs               ActivityLog[]
 }
 
 model ActivityType {
-  id             Int    @id @default(autoincrement())
-  name           String
-  expectedValue  Float
-  unit           String
-  logs           ActivityLog[]
+  id                 Int      @id @default(autoincrement())
+  internal_key       String   @unique @default(uuid())
+
+  name               String
+  expected_value     Float
+  unit               String?
+
+  created_by         String   @default("system")
+  updated_by         String   @default("system")
+  created_date_time  DateTime @default(now())
+  updated_date_time  DateTime @updatedAt
+
+  logs               ActivityLog[]
 }
 
 model ActivityLog {
-  id              Int      @id @default(autoincrement())
-  userId          Int
-  activityTypeId  Int
-  value           Float
-  date            DateTime @default(now())
+  id                 Int      @id @default(autoincrement())
+  internal_key       String   @unique @default(uuid())
 
-  user            User          @relation(fields: [userId], references: [id])
-  activityType    ActivityType  @relation(fields: [activityTypeId], references: [id])
+  user_id            Int
+  activity_type_id   Int
+
+  value              Float
+  log_date           DateTime
+
+  created_by         String   @default("system")
+  updated_by         String   @default("system")
+  created_date_time  DateTime @default(now())
+  updated_date_time  DateTime @updatedAt
+
+  user               User         @relation(fields: [user_id], references: [id])
+  activityType       ActivityType @relation(fields: [activity_type_id], references: [id])
+
+  @@index([user_id])
+  @@index([activity_type_id])
+}
+
+model AgentRun {
+  id                 Int      @id @default(autoincrement())
+  internal_key       String   @unique @default(uuid())
+
+  user_input         String
+  final_output       String?
+  status             String   @default("running") // running | completed | failed
+
+  created_by         String   @default("system")
+  updated_by         String   @default("system")
+  created_date_time  DateTime @default(now())
+  updated_date_time  DateTime @updatedAt
+
+  steps              AgentStep[]
+}
+
+model AgentStep {
+  id                 Int      @id @default(autoincrement())
+  internal_key       String   @unique @default(uuid())
+
+  agent_run_id       Int
+
+  step_number        Int
+  action_type        String   // tool_call | reasoning | final
+
+  tool_name          String?
+  tool_input         Json?
+  tool_output        Json?
+
+  llm_response       String?
+
+  created_by         String   @default("system")
+  updated_by         String   @default("system")
+  created_date_time  DateTime @default(now())
+  updated_date_time  DateTime @updatedAt
+
+  agentRun           AgentRun @relation(fields: [agent_run_id], references: [id])
+
+  @@index([agent_run_id])
+}
+
+model ToolLog {
+  id                 Int      @id @default(autoincrement())
+  internal_key       String   @unique @default(uuid())
+
+  tool_name          String
+  input              Json?
+  output             Json?
+  execution_time_ms  Int?
+
+  created_by         String   @default("system")
+  updated_by         String   @default("system")
+  created_date_time  DateTime @default(now())
+  updated_date_time  DateTime @updatedAt
 }

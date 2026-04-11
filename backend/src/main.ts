@@ -1,21 +1,27 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-
-import { AppModule } from './app.module';
+import { AppModule } from './modules/main/app.module';
+import { IENV } from './common/types/IENV';
+import { ApplicationShareData } from './config/application.share.data';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { setupApplication } from './config/bootstrap';
+import { logStartupInfo } from './config/startup-info';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
-  // Get ConfigService from the app context
-  const appUrl = configService.get<string>('APP_URL') || '*';
-  const port = configService.get<number>('PORT') || 5000;
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.enableCors({
-    origin: appUrl, // frontend URL
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
-  });
+  const configService = app.get(ConfigService<IENV>);
+  ApplicationShareData.initFromConfig(configService);
 
-  await app.listen(port);
+  setupApplication(app);
+
+  await app.listen(ApplicationShareData.ENV.PORT);
+
+  // clean startup log
+  await logStartupInfo(app);
 }
-bootstrap();
+
+bootstrap().catch((err) => {
+  console.error('Error starting server:', err);
+  process.exit(1);
+});

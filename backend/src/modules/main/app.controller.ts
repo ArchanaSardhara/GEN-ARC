@@ -2,10 +2,10 @@ import { Body, Controller, Get, Post, Res } from '@nestjs/common';
 import express from 'express';
 import { join } from 'path';
 
-import { AppService } from './app.service';
 import { AgentService } from '@lib/agents/agent.service';
-import { MCPService } from '@lib/mcp/mcp.service';
 import { DriftService } from '@lib/agents/drift.service';
+import { MCPService } from '@lib/mcp/mcp.service';
+import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
@@ -15,6 +15,11 @@ export class AppController {
     private readonly _mcpService: MCPService,
     private readonly _draftService: DriftService,
   ) {}
+
+  @Get()
+  root() {
+    return { message: 'API is running' };
+  }
 
   @Get('/')
   serveHtml(@Res() res: express.Response) {

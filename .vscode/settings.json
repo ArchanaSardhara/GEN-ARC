@@ -1,0 +1,19 @@
+{
+    "cSpell.words": [
+      "autoincrement",
+      "dotenv",
+      "IENV",
+      "pids"
+    ],
+     "git-graph.graphStyle": "compact",
+  "git-graph.showUncommittedChanges": true,
+    "git.decorations.enabled": true,
+  "git.enableSmartCommit": true,
+  "git.autofetch": true,
+   "files.eol": "\n",
+    "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+  "editor.colorDecorators": true,
+   "editor.defaultColorDecorators": true
+}
